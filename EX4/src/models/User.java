@@ -71,6 +71,26 @@ public class User {
         return (this.name + " " + this.surname + " " + this.phone + " " + this.email + " " + this.age);
     }
 
+    public void setName(String name){
+        this.name = name;
+    }
+
+    public void setSurname(String surname){
+        this.surname = surname;
+    }
+
+    public void setPhone(String phone){
+        this.phone = phone;
+    }
+
+    public void setEmail(String email){
+        this.email = email;
+    }
+
+    public void setAge(int age){
+        this.age = age;
+    }
+
     public String getName(){
         return this.name;
     }
@@ -78,6 +98,15 @@ public class User {
     public String getSurname(){
         return this.surname;
     }
+
+    public String getPhone(){
+        return this.phone;
+    }
+
+    public String getEmail(){
+        return this.email;
+    }
+
     public int getAge(){
         return this.age;
     }

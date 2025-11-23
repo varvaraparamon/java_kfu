@@ -8,8 +8,8 @@ public class CartServiceImpl implements CartService{
 
     private CartRepository cartRepository;
 
-    public CartServiceImpl(CartRepositoryMapImpl cartRepository) {
-        this.cartRepository = cartRepository;
+    public CartServiceImpl(CartRepository cartRepository2) {
+        this.cartRepository = cartRepository2;
     }
 
     @Override

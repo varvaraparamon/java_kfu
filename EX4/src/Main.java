@@ -7,9 +7,9 @@ import EX4.src.services.*;
 public class Main {
     public static void main(String[] args) {
 
-        UserRepositoryMapImpl userRepository = new UserRepositoryMapImpl();
-        ProductRepositoryMapImpl productRepository = new ProductRepositoryMapImpl();
-        CartRepositoryMapImpl cartRepository = new CartRepositoryMapImpl();
+        UserRepository userRepository = new UserRepositoryFileBasedImpl("users.txt");
+        ProductRepository productRepository = new ProductRepositoryFileBasedImpl("product.txt");
+        CartRepository cartRepository = new CartRepositoryMapImpl();
 
         UserService userService = new UserServiceImpl(userRepository);
         ProductService productService = new ProductServiceImpl(productRepository);

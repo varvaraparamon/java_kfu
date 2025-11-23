@@ -4,10 +4,10 @@ public class Cart {
 
     private Integer id;
     private Integer userId;
-    private CartProduct[] cartProducts = new CartProduct[50];
+    private CartProduct[] cartProducts = new CartProduct[50]; //лист айдишников, отдельная сущность
     private int currentSize = 0;
     private double currentSum = 0;
-    private Logger logger;
+    private Logger logger; //убрать и в сервис добавить, в продукт и юзер так же, либо импорт из пакета утилс
 
     public static class CartBuilder {
         private Integer userId;
@@ -23,6 +23,10 @@ public class Cart {
         }
     }
 
+    public Cart(){
+        this.logger = Logger.getLogger();
+        this.logger.createCart(this);
+    }
 
     public Cart(int userId){
         this.userId = userId;
@@ -59,9 +63,26 @@ public class Cart {
         return this.userId;
     }
 
+    public int getCurrentSize(){
+        return this.currentSize;
+    }
+
 
     public double getCurrentSum(){
         return this.currentSum;
+    }
+
+    public void setUserId(int userId){
+        this.userId = userId;
+    }
+
+    public void setCurrentSize(int currentSize){
+        this.currentSize = currentSize;
+    }
+
+
+    public void getCurrentSum(double currentSum){
+        this.currentSum = currentSum;
     }
 
     private static class CartProduct {

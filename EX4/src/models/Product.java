@@ -29,10 +29,11 @@ public class Product {
             return new Product(name, description, price);
         }
     }
-
-    public Product(Logger logger){
-        this.logger = logger;
+    public Product(){
+        this.logger = Logger.getLogger();
+        this.logger.createProduct(this);
     }
+
 
     public Product(String name, String description, double price){
         this.name = name;
@@ -65,6 +66,19 @@ public class Product {
 
     public double getPrice(){
         return this.price;
+    }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPrice(double price){
+        this.price = price;
     }
 
     @Override

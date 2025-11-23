@@ -2,13 +2,12 @@ package EX4.src.services;
 
 import EX4.src.models.User;
 import EX4.src.repositories.UserRepository;
-import EX4.src.repositories.UserRepositoryMapImpl;
 
 public class UserServiceImpl implements UserService{
 
     private UserRepository userRepository;
 
-    public UserServiceImpl(UserRepositoryMapImpl userRepository){
+    public UserServiceImpl(UserRepository userRepository){
         this.userRepository = userRepository;
     }
 
