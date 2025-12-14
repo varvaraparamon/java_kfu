@@ -2,14 +2,18 @@ package EX4.src.repositories;
 
 import EX4.src.models.Cart;
 
-import java.io.*;
 
-public class CartRepositoryFileBasedImpl implements CartRepository{
+import java.io.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+public class CartRepositoryFileBasedImpl implements CartRepository {
 
     private String fileName;
-    private int currentId = 1;
+    private Long currentId = 1L;
 
-    public CartRepositoryFileBasedImpl(){
+    public CartRepositoryFileBasedImpl(String fileName){
         this.fileName = fileName;
         initCurrentId();
     }
@@ -17,15 +21,14 @@ public class CartRepositoryFileBasedImpl implements CartRepository{
     private void initCurrentId() {
 
 
-        int maxId = 0;
+        Long maxId = 0L;
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String lineFromFile = reader.readLine();
             while (lineFromFile != null) {
 
                 String parsedLine[] = lineFromFile.split("\\|");
-                int id = Integer.parseInt(parsedLine[0]);
+                Long id = Long.parseLong(parsedLine[0]);
                 if (id > maxId) {
                     maxId = id;
                 }
@@ -38,55 +41,119 @@ public class CartRepositoryFileBasedImpl implements CartRepository{
         currentId = maxId + 1;
 }
 
-    private Mapper<Cart, String> cartToStringLineMapper = cart -> {
+   private Mapper<Cart, String> cartToStringLineMapper = cart -> {
         StringBuilder line = new StringBuilder();
+
         line.append(cart.getId())
                 .append("|")
                 .append(cart.getUserId())
                 .append("|");
 
-        Cart.CartPrinter printer = cart.new CartPrinter();
-
-        StringBuilder products = new StringBuilder();
-
-        String printed = printer.print().replace("\n", ",");
-            if (!printed.isEmpty()) {
-            String[] lines = printed.split("\n");
-            for (String l : lines) {
-                if (l.isEmpty()) continue;
-                products.append(l.replace(" ", "")).append(","); 
+        for (int i = 0; i < cart.getCurrentSize(); i++) {
+            line.append(cart.getCartProductsId()[i]).append(",");
         }
 
-        line.append(printed)
-            .append("|")
-            .append(cart.getCurrentSum())
-            .append("|");
+        line.append("|")
+                .append(cart.getCurrentSum())
+                .append("|");
 
-      return line.toString();
+        return line.toString();
     };
 
-    private Mapper<String, Cart> stringLineToCarttMapper = line -> {
-        Cart cart = new Cart();
-        String parsedLine[] = line.split("\\|");
-        cart.setId(Integer.parseInt(parsedLine[0]));
-        cart.setUserId(Integer.parseInt(parsedLine[1]));
-        product.setPrice(Double.parseDouble(parsedLine[2]));
 
-        return product;
+    private Mapper<String, Cart> stringLineToCartMapper = line -> {
+        String[] parts = line.split("\\|");
+
+        Cart cart = new Cart();
+
+        cart.setId(Long.parseLong(parts[0]));
+        cart.setUserId(Long.parseLong(parts[1]));
+
+
+        String productPart = parts[2]; 
+
+        if (!productPart.isEmpty()) {
+            String[] ids = productPart.split(",");
+            for (String idStr : ids) {
+                if (idStr.isEmpty()) 
+                    continue;
+                cart.addProduct(Long.parseLong(idStr));
+            }
+        }
+
+        cart.setCurrentSum(Double.parseDouble(parts[3]));
+
+        return cart;
     };
 
 
     @Override
     public void save(Cart cart) {
-        if (cart.getId() == null) {
-            cart.setId(currentId++);
+        File original = new File(fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(original, true))) {
+
+            if (cart.getId() == null) {
+                cart.setId(currentId++);
+            }
+
+            writer.write(cartToStringLineMapper.map(cart));
+            writer.newLine();
+
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
         }
-        carts.put(cart.getId(), cart);
     }
 
     @Override
-    public Cart findById(Integer id) {
-        return carts.get(id);
+    public void update(Cart cart) {
+        File original = new File(fileName);
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(original))) {
+
+            List<String> lines = reader.lines()
+                    .map(value -> stringLineToCartMapper.map(value))
+                    .map(foundCart -> {
+                        if (!Objects.equals(foundCart.getId(), cart.getId())) {
+                            return foundCart;
+                        }
+                        return cart; 
+                    })
+                    .map(objectValue -> cartToStringLineMapper.map(objectValue))
+                    .collect(Collectors.toList());
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(original))) {
+                for (String l : lines) {
+                    writer.write(l);
+                    writer.newLine();
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+
+    @Override
+    public Cart findById(Long id) {
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String lineFromFile = reader.readLine();
+
+            while (lineFromFile != null) {
+                Cart cart = stringLineToCartMapper.map(lineFromFile);
+                if (cart.getId().equals(id)) {
+                    return cart;
+                }
+                lineFromFile = reader.readLine();
+            }
+            
+            return null;
+
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        } 
+        
     }
 
 

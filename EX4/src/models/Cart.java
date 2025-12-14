@@ -1,19 +1,19 @@
 package EX4.src.models;
 
+
 public class Cart {
 
-    private Integer id;
-    private Integer userId;
-    private CartProduct[] cartProducts = new CartProduct[50]; //лист айдишников, отдельная сущность
-    private int currentSize = 0;
-    private double currentSum = 0;
-    private Logger logger; //убрать и в сервис добавить, в продукт и юзер так же, либо импорт из пакета утилс
+    private Long id;
+    private Long userId;
+    private Long[] cartProductsId = new Long[50]; //лист айдишников, отдельная сущность
+    private Integer currentSize = 0;
+    private Double currentSum = 0.0;
 
     public static class CartBuilder {
-        private Integer userId;
+        private Long userId;
 
 
-        public CartBuilder user(Integer userId) {
+        public CartBuilder user(Long userId) {
             this.userId = userId;
             return this;
         }
@@ -24,85 +24,72 @@ public class Cart {
     }
 
     public Cart(){
-        this.logger = Logger.getLogger();
-        this.logger.createCart(this);
+
     }
 
-    public Cart(int userId){
+
+    public Cart(Long id, Long userId, Integer currentSize, Double currentSum){
+        this.id = id;
+        this.userId = userId;
+        this.currentSize = currentSize;
+        this.currentSum = currentSum;
+    }
+
+    public Cart(Long userId){
         this.userId = userId;
         
-        this.logger = Logger.getLogger();
-        this.logger.createCart(this);
     }
 
-    public void setId(Integer id){
+    public void setId(Long id){
         this.id = id;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void addProduct(int productId, double price, int amount){
-        for (int i = 0; i < currentSize; i++) {
-            if (cartProducts[i].productId.equals(productId)) {
-                cartProducts[i].count += amount;
-                this.currentSum += price * amount;
-                this.logger.addProduct(productId);
-                return;
-            }
-        }
-
-        cartProducts[currentSize] = new CartProduct(productId, amount);
-        this.currentSize++;
-        this.currentSum += price * amount;
-        this.logger.addProduct(productId);
+    public void addProduct(Long cartProductId) {
+        cartProductsId[currentSize++] = cartProductId;
     }
 
-    public int getUserId(){
+    public Long getUserId(){
         return this.userId;
     }
 
-    public int getCurrentSize(){
+    public Integer getCurrentSize(){
         return this.currentSize;
     }
 
 
-    public double getCurrentSum(){
+    public Double getCurrentSum(){
         return this.currentSum;
     }
 
-    public void setUserId(int userId){
+    public void setUserId(Long userId){
         this.userId = userId;
     }
 
-    public void setCurrentSize(int currentSize){
+    public void setCurrentSize(Integer currentSize){
         this.currentSize = currentSize;
     }
 
 
-    public void getCurrentSum(double currentSum){
+    public void setCurrentSum(Double currentSum){
         this.currentSum = currentSum;
     }
 
-    private static class CartProduct {
-        Integer productId;
-        int count;
-
-        CartProduct(int productId, int count) {
-            this.productId = productId;
-            this.count = count;
-        }
+    public Long[] getCartProductsId(){
+        return this.cartProductsId;
     }
 
-    public class CartPrinter {
-        public String print() {
-            String result = "";
-            for (int i = 0; i < currentSize; i++) {
-                result += cartProducts[i].productId + ": " + cartProducts[i].count + "\n";
-            }
-            return result;
-        }
-    }
+    // public class CartPrinter {
+    //     public String print() {
+    //         String result = "";
+    //         for (int i = 0; i < currentSize; i++) {
+    //             result += cartProductsId[i].productId + ": " + cartProductsId[i].count + "\n";
+    //         }
+    //         return result;
+    //     }
+    // }
     
 }

@@ -6,7 +6,7 @@ import java.io.*;
 
 public class ProductRepositoryFileBasedImpl implements ProductRepository{
     private String fileName;
-    private int currentId = 1;
+    private Long currentId = 1L;
 
     public ProductRepositoryFileBasedImpl(String fileName){
         this.fileName = fileName;
@@ -16,15 +16,14 @@ public class ProductRepositoryFileBasedImpl implements ProductRepository{
     private void initCurrentId() {
 
 
-        int maxId = 0;
+        Long maxId = 0L;
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
             String lineFromFile = reader.readLine();
             while (lineFromFile != null) {
 
                 String parsedLine[] = lineFromFile.split("\\|");
-                int id = Integer.parseInt(parsedLine[0]);
+                Long id = Long.parseLong(parsedLine[0]);
                 if (id > maxId) {
                     maxId = id;
                 }
@@ -54,7 +53,7 @@ public class ProductRepositoryFileBasedImpl implements ProductRepository{
     private Mapper<String, Product> stringLineToProductMapper = line -> {
         Product product = new Product();
         String parsedLine[] = line.split("\\|");
-        product.setId(Integer.parseInt(parsedLine[0]));
+        product.setId(Long.parseLong(parsedLine[0]));
         product.setName(parsedLine[1]);
         product.setPrice(Double.parseDouble(parsedLine[2]));
 
@@ -70,8 +69,7 @@ public class ProductRepositoryFileBasedImpl implements ProductRepository{
         }
 
         String lineToSave = productToStringLineMapper.map(product);
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))){
             writer.write(lineToSave + "\n");
             writer.close();
         } catch (IOException e) {
@@ -79,9 +77,8 @@ public class ProductRepositoryFileBasedImpl implements ProductRepository{
         }
     }
     @Override
-    public Product findById(Integer id) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+    public Product findById(Long id) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
             String lineFromFile = reader.readLine();
             while (lineFromFile != null) {
                 Product product = stringLineToProductMapper.map(lineFromFile);

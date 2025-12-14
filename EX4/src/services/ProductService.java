@@ -4,5 +4,5 @@ import EX4.src.models.Product;
 
 public interface ProductService {
     void create(Product product);
-    Product getById(Integer id);
+    Product getById(Long id);
 }

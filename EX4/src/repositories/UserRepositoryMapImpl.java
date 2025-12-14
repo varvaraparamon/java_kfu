@@ -7,8 +7,8 @@ import java.util.Map;
 
 public class UserRepositoryMapImpl implements UserRepository {
 
-    private Map<Integer, User> users;
-    private int currentId = 1;
+    private Map<Long, User> users;
+    private Long currentId = 1L;
 
     public UserRepositoryMapImpl(){
         this.users = new HashMap<>();
@@ -23,7 +23,7 @@ public class UserRepositoryMapImpl implements UserRepository {
     }
 
     @Override
-    public User findById(Integer id) {
+    public User findById(Long id) {
         return users.get(id);
     }
 

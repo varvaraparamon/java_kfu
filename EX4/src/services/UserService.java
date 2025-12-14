@@ -4,5 +4,5 @@ import EX4.src.models.User;
 
 public interface UserService {
     void create(User user);
-    User getById(Integer id);
+    User getById(Long id);
 }

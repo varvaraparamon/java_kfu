@@ -7,8 +7,8 @@ import java.util.Map;
 
 public class ProductRepositoryMapImpl implements ProductRepository{
 
-    private Map<Integer, Product> products;
-    private int currentId = 1;
+    private Map<Long, Product> products;
+    private Long currentId = 1L;
 
     public ProductRepositoryMapImpl(){
         this.products = new HashMap<>();
@@ -23,7 +23,7 @@ public class ProductRepositoryMapImpl implements ProductRepository{
     }
 
     @Override
-    public Product findById(Integer id) {
+    public Product findById(Long id) {
         return products.get(id);
     }
 

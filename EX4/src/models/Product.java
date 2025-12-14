@@ -1,17 +1,18 @@
 package EX4.src.models;
 
+
+
 public class Product {
-    private Integer id;
+    private Long id;
     private String name;
     private String description;
-    private double price;
+    private Double price;
 
-    private Logger logger;
 
     public static class ProductBuilder {
         private String name;
         private String description;
-        private double price;
+        private Double price;
 
         public ProductBuilder name(String name) {
             this.name = name;
@@ -21,7 +22,7 @@ public class Product {
             this.description = description;
             return this;
         }
-        public ProductBuilder price(double price) {
+        public ProductBuilder price(Double price) {
             this.price = price;
             return this;
         }
@@ -30,25 +31,28 @@ public class Product {
         }
     }
     public Product(){
-        this.logger = Logger.getLogger();
-        this.logger.createProduct(this);
+
     }
 
 
-    public Product(String name, String description, double price){
+    public Product(String name, String description, Double price){
         this.name = name;
         this.description = description;
         this.price = price;
-        this.logger = Logger.getLogger();
-
-        this.logger.createProduct(this);
     }
 
-    public void setId(Integer id){
+    public Product(Long id, String name, String description, Double price){
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+    }
+
+    public void setId(Long id){
         this.id = id;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -64,7 +68,7 @@ public class Product {
         return this.description;
     }
 
-    public double getPrice(){
+    public Double getPrice(){
         return this.price;
     }
 
@@ -77,7 +81,7 @@ public class Product {
         this.description = description;
     }
 
-    public void setPrice(double price){
+    public void setPrice(Double price){
         this.price = price;
     }
 

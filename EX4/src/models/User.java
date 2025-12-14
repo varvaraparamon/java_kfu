@@ -1,22 +1,22 @@
 package EX4.src.models;
 
+
+
 public class User {
-    private Integer id;
+    private Long id;
     private String name;
     private String surname;
     private String phone;
     private String email;
-    private int age;
+    private Integer age;
 
-
-    private Logger logger;
 
     public static class UserBuilder {
         private String name;
         private String surname;
         private String phone;
         private String email;
-        private int age;
+        private Integer age;
 
         public UserBuilder name(String name) {
             this.name = name;
@@ -34,7 +34,7 @@ public class User {
             this.email = email;
             return this;
         }
-        public UserBuilder age(int age) {
+        public UserBuilder age(Integer age) {
             this.age = age;
             return this;
         }
@@ -44,26 +44,32 @@ public class User {
     }
 
     public User(){
-        this.logger = Logger.getLogger();
     }
 
-    public User(String name, String surname, String phone, String email, int age){
+    public User(String name, String surname, String phone, String email, Integer age){
         this.name = name;
         this.surname = surname;
         this.phone = phone;
         this.email = email;
         this.age = age;
 
-        this.logger = Logger.getLogger();
-
-        this.logger.createUser(this);
     }
 
-    public void setId(Integer id) {
+    public User(Long id, String name, String surname, String phone, String email, Integer age){
+        this.id = id;
+        this.name = name;
+        this.surname = surname;
+        this.phone = phone;
+        this.email = email;
+        this.age = age;
+
+    }
+
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -87,7 +93,7 @@ public class User {
         this.email = email;
     }
 
-    public void setAge(int age){
+    public void setAge(Integer age){
         this.age = age;
     }
 
@@ -107,7 +113,7 @@ public class User {
         return this.email;
     }
 
-    public int getAge(){
+    public Integer getAge(){
         return this.age;
     }
 }

@@ -1,4 +1,8 @@
-package EX4.src.models;
+package EX4.src;
+
+import EX4.src.models.Cart;
+import EX4.src.models.Product;
+import EX4.src.models.User;
 
 public class Logger {
     private static Logger instance;
@@ -15,7 +19,7 @@ public class Logger {
         return instance;
     }
 
-    public void addProduct(int productId) {
+    public void addProduct(Long productId) {
         System.out.println("Добавлен новый товар: " + productId + " Id");
     }
 

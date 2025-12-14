@@ -6,6 +6,6 @@ public interface ProductRepository {
 
     void save(Product product);
 
-    Product findById(Integer id);
+    Product findById(Long id);
 
 }

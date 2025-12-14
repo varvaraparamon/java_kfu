@@ -9,7 +9,7 @@ import java.io.*;
 public class UserRepositoryFileBasedImpl implements UserRepository {
 
     private String fileName;
-    private int currentId = 1;
+    private Long currentId = 1L;
 
     public UserRepositoryFileBasedImpl(String fileName){
         this.fileName = fileName;
@@ -19,15 +19,14 @@ public class UserRepositoryFileBasedImpl implements UserRepository {
     private void initCurrentId() {
 
 
-        int maxId = 0;
+        Long maxId = 0L;
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
             String lineFromFile = reader.readLine();
             while (lineFromFile != null) {
 
                 String parsedLine[] = lineFromFile.split("\\|");
-                int id = Integer.parseInt(parsedLine[0]);
+                Long id = Long.parseLong(parsedLine[0]);
                 if (id > maxId) {
                     maxId = id;
                 }
@@ -74,7 +73,7 @@ public class UserRepositoryFileBasedImpl implements UserRepository {
     private Mapper<String, User> stringLineToUserMapper = line -> {
         User user = new User();
         String parsedLine[] = line.split("\\|");
-        user.setId(Integer.parseInt(parsedLine[0]));
+        user.setId(Long.parseLong(parsedLine[0]));
         user.setName(parsedLine[1]);
         if (parsedLine[2].equals("NULL")) {
             user.setSurname(null);
@@ -102,8 +101,7 @@ public class UserRepositoryFileBasedImpl implements UserRepository {
         }
 
         String lineToSave = userToStringLineMapper.map(user);
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true))){
             writer.write(lineToSave + "\n");
             writer.close();
         } catch (IOException e) {
@@ -111,9 +109,8 @@ public class UserRepositoryFileBasedImpl implements UserRepository {
         }
     }
     @Override
-    public User findById(Integer id) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+    public User findById(Long id) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))){
             String lineFromFile = reader.readLine();
             while (lineFromFile != null) {
                 User user = stringLineToUserMapper.map(lineFromFile);

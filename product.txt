@@ -1,0 +1,7 @@
+1|Milk|1 liter|90.5|
+2|Milk|1 liter|90.5|
+3|Milk|1 liter|90.5|
+4|Milk|1 liter|90.5|
+5|Milk|1 liter|90.5|
+6|Milk|1 liter|90.5|
+7|Milk|1 liter|90.5|

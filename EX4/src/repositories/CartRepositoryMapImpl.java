@@ -7,8 +7,8 @@ import java.util.Map;
 
 public class CartRepositoryMapImpl implements CartRepository{
 
-    private Map<Integer, Cart> carts;
-    private int currentId = 1;
+    private Map<Long, Cart> carts;
+    private Long currentId = 1L;
 
     public CartRepositoryMapImpl(){
         this.carts = new HashMap<>();
@@ -23,8 +23,14 @@ public class CartRepositoryMapImpl implements CartRepository{
     }
 
     @Override
-    public Cart findById(Integer id) {
+    public Cart findById(Long id) {
         return carts.get(id);
+    }
+
+    @Override
+    public void update(Cart cart) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'update'");
     }
 
 
