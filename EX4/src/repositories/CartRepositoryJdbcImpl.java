@@ -9,15 +9,15 @@ import EX4.src.models.Cart;
 
 public class CartRepositoryJdbcImpl implements CartRepository{
 
-    private static final String SQL_SELECT_ALL = "SELECT id, user_id, current_size, current_sum from cart order by id;";
+    private static final String SQL_SELECT_ALL = "SELECT id, user_id, current_size from cart order by id;";
     
-    private static final String SQL_SELECT_BY_ID = "SELECT id, user_id, current_size, current_sum from cart where id = ?";
+    private static final String SQL_SELECT_BY_ID = "SELECT id, user_id, current_size from cart where id = ?";
 
     private static final String SQL_INSERT = "insert into " +
             "cart(user_id) values (?)";
 
-    private static final String SQL_UPDATE = "update cart set current_size = ?, " +
-            "current_sum = ? where id = ?";
+    private static final String SQL_UPDATE = "update cart set current_size = ? " +
+            "where id = ?";
 
     private Connection connection;
 
@@ -28,8 +28,8 @@ public class CartRepositoryJdbcImpl implements CartRepository{
     private RowMapper<Cart> cartRowMapper = row -> new Cart(
             row.getLong("id"),
             row.getLong("user_id"),
-            row.getInt("current_size"),
-            row.getDouble("current_sum"));
+            row.getInt("current_size")
+        );
 
 
     public List<Cart> findAll() {
@@ -154,8 +154,7 @@ public class CartRepositoryJdbcImpl implements CartRepository{
             statement = connection.prepareStatement(SQL_UPDATE);
 
             statement.setInt(1, cart.getCurrentSize());
-            statement.setDouble(2, cart.getCurrentSum());
-            statement.setLong(3, cart.getId());
+            statement.setLong(2, cart.getId());
 
             int affectedRows = statement.executeUpdate();
 

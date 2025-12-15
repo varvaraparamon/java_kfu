@@ -35,6 +35,12 @@ public class Cart {
         this.currentSum = currentSum;
     }
 
+    public Cart(Long id, Long userId, Integer currentSize){
+        this.id = id;
+        this.userId = userId;
+        this.currentSize = currentSize;
+    }
+
     public Cart(Long userId){
         this.userId = userId;
         

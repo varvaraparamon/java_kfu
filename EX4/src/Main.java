@@ -50,7 +50,7 @@ public class Main {
 
 
             cartService.create(user.getId());
-            Cart cart = cartService.getById(7L);
+            Cart cart = cartService.getById(1L);
 
             System.out.println("Создана корзина с ID: " + cart.getId());
 
@@ -60,7 +60,7 @@ public class Main {
             // System.out.println("Содержимое корзины:\n" + printer.print());
 
             cart = cartService.getById(cart.getId());
-            System.out.println("Общая сумма = " + cart.getCurrentSum());
+            System.out.println("Корзина юзера номер " + cart.getUserId());
 
         } catch (SQLException e) {
             e.printStackTrace();
