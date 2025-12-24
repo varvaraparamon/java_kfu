@@ -2,6 +2,7 @@ package com.example.services;
 
 import com.example.models.Cart;
 import com.example.models.PromoCode;
+import com.example.models.PromoUsageType;
 import com.example.repositories.CartRepository;
 import com.example.repositories.PromoCodeRepository;
 
@@ -34,7 +35,7 @@ public class CartPromoService {
         cart.setAppliedPromoCodeId(promo.getId()); 
         cartRepository.update(cart);
 
-        if (promo.getUsageType().name().equals("SINGLE_USE")) {
+        if (promo.getUsageType().equals(PromoUsageType.SINGLE_USE)) {
             promo.setActive(false);
             promoCodeRepository.update(promo);
         }

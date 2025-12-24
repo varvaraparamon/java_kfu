@@ -6,7 +6,8 @@ import com.example.repositories.PromoCodeRepository;
 import java.util.List;
 import java.util.Optional;
 
-public class PromoCodeServiceImpl implements PromoCodeService {
+public class PromoCodeServiceImpl implements PromoCodeService { // сделать приватнй метод валидации промокода (апдейт создание)
+    // проверка на уникальность отрицательность и тд
 
     private final PromoCodeRepository promoCodeRepository;
 
