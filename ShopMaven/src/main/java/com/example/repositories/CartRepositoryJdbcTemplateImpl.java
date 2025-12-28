@@ -36,7 +36,7 @@ public class CartRepositoryJdbcTemplateImpl implements CartRepository{
     private RowMapper<Cart> cartRowMapper = (row, rowNumber) -> Cart.builder()
             .id(row.getLong("id"))
             .userId(row.getLong("user_id"))
-            .appliedPromoCodeId(row.getLong("applied_promo_code_id"))
+            .appliedPromoCodeId(row.getObject("applied_promo_code_id", Long.class))
             .build();
 
     @Override

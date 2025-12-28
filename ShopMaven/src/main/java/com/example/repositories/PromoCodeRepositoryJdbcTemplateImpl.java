@@ -19,18 +19,18 @@ import com.example.models.PromoUsageType;
 
 public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
 
-    private static final String SQL_SELECT_ALL = "SELECT id, code, type, value, usage_type, active, expires_at from promocode order by id;";
+    private static final String SQL_SELECT_ALL = "SELECT id, code, type, \"value\", usage_type, active, expires_at from promocode order by id;";
     
-    private static final String SQL_SELECT_BY_ID = "SELECT id, code, type, value, usage_type, active, expires_at from promocode where id = ?";
+    private static final String SQL_SELECT_BY_ID = "SELECT id, code, type, \"value\", usage_type, active, expires_at from promocode where id = ?";
 
     private static final String SQL_INSERT = "insert into " +
-            "promocode(code, type, value, usage_type, active, expires_at) values (?, ?, ?, ?, ?, ?)";
+            "promocode(code, type, \"value\", usage_type, active, expires_at) values (?, ?, ?, ?, ?, ?)";
 
     private static final String SQL_UPDATE = "update promocode set code = ?, " +
-            "type = ?, value = ?, usage_type = ?, active = ?, expires_at = ? where id = ?";
+            "type = ?, \"value\" = ?, usage_type = ?, active = ?, expires_at = ? where id = ?";
 
     private static final String SQL_SELECT_BY_CODE =
-        "SELECT id, code, type, value, usage_type, active, expires_at FROM promocode WHERE code = ?";
+        "SELECT id, code, type, \"value\", usage_type, active, expires_at FROM promocode WHERE code = ?";
 
     private static final String SQL_DELETE_BY_ID =
         "DELETE FROM promocode WHERE id = ?";
