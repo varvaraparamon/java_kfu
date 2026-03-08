@@ -1,3 +1,4 @@
+-- Active: 1767002700921@@localhost@5442@postgres
 CREATE TABLE "user" (
                         id SERIAL PRIMARY KEY,
                         name VARCHAR(20) NOT NULL,

@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static com.github.npathai.hamcrestopt.OptionalMatchers.*;
 
 
@@ -98,6 +99,25 @@ class PromoCodeServiceImplTest {
             assertThat(savedPromo.get(), hasProperty("type", equalTo(type)));
             assertThat(savedPromo, isPresent());
             assertThat(savedPromo.get(), hasProperty("value", equalTo(value)));
+        }
+
+        @Test
+        void should_not_create_promo_code_with_duplicate_code() {
+            PromoCode promo = PromoCode.builder()
+                    .code("PROMO10") 
+                    .type(PromoType.PERCENT)
+                    .value(5.0)
+                    .usageType(PromoUsageType.SINGLE_USE)
+                    .active(true)
+                    .expiresAt(LocalDateTime.now().plusDays(10))
+                    .build();
+
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> promoCodeService.create(promo)
+            );
+
+            assertThat(ex.getMessage(), equalTo("Промокод с таким кодом уже существует"));
         }
     }
 
@@ -185,6 +205,20 @@ class PromoCodeServiceImplTest {
             Optional<PromoCode> updatedPromo = promoCodeService.getById(2L);
             assertThat(updatedPromo, isPresent());
             assertThat(updatedPromo.get(), hasProperty("value", equalTo(newValue)));
+        }
+
+        @Test
+        void should_not_update_promo_code_if_code_belongs_to_another_promo() {
+            PromoCode promo = promoCodeService.getById(2L).orElseThrow();
+
+            promo.setCode("PROMO10");
+
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> promoCodeService.update(promo)
+            );
+
+            assertThat(ex.getMessage(), equalTo("Промокод с таким кодом уже существует"));
         }
     }
 

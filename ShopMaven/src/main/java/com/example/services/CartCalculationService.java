@@ -8,10 +8,15 @@ import com.example.repositories.CartProductRepository;
 import com.example.repositories.CartRepository;
 import com.example.repositories.ProductRepository;
 import com.example.repositories.PromoCodeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CartCalculationService {
 
     private final CartRepository cartRepository;
@@ -19,43 +24,60 @@ public class CartCalculationService {
     private final ProductRepository productRepository;
     private final PromoCodeRepository promoCodeRepository;
 
-    public CartCalculationService(CartRepository cartRepository,
-                                  CartProductRepository cartProductRepository,
-                                  ProductRepository productRepository,
-                                  PromoCodeRepository promoCodeRepository) {
-        this.cartRepository = cartRepository;
-        this.cartProductRepository = cartProductRepository;
-        this.productRepository = productRepository;
-        this.promoCodeRepository = promoCodeRepository;
-    }
-
     public double calculateCartTotal(Long cartId) {
-        Optional<Cart> cartOpt = cartRepository.findById(cartId);
-        if (cartOpt.isEmpty()) return 0.0;
-
-        Cart cart = cartOpt.get();
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        if (cart == null) return 0.0;
 
         double total = 0.0;
         List<CartProduct> items = cartProductRepository.findByCartId(cart.getId());
+        
         for (CartProduct item : items) {
-            Optional<Product> productOpt = productRepository.findById(item.getProductId());
-            if (productOpt.isPresent()) {
-                total += productOpt.get().getPrice() * item.getCount();
+            Product product = productRepository.findById(item.getProductId()).orElse(null);
+            if (product != null) {
+                total += product.getPrice() * item.getCount();
             }
         }
 
         if (cart.getAppliedPromoCodeId() != null) {
-            Optional<PromoCode> promoOpt = promoCodeRepository.findById(cart.getAppliedPromoCodeId());
-            if (promoOpt.isPresent()) {
-                PromoCode promo = promoOpt.get();
-                if (promo.getType().name().equals("PERCENT")) {
-                    total = total * (1.0 - promo.getValue() / 100.0);
-                } else if (promo.getType().name().equals("FIXED")) {
-                    total = total - promo.getValue();
-                }
+            PromoCode promo = promoCodeRepository.findById(cart.getAppliedPromoCodeId()).orElse(null);
+            if (promo != null && isPromoCodeValid(promo)) {
+                total = applyPromoDiscount(total, promo);
             }
         }
 
         return Math.max(total, 0.0);
+    }
+    
+    public double calculateSubtotal(Long cartId) {
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        if (cart == null) return 0.0;
+
+        return cartProductRepository.findByCartId(cart.getId()).stream()
+                .mapToDouble(item -> {
+                    Product product = productRepository.findById(item.getProductId()).orElse(null);
+                    return product != null ? product.getPrice() * item.getCount() : 0;
+                })
+                .sum();
+    }
+    
+    public int getTotalItemsCount(Long cartId) {
+        return cartProductRepository.findByCartId(cartId).stream()
+                .mapToInt(CartProduct::getCount)
+                .sum();
+    }
+    
+    private boolean isPromoCodeValid(PromoCode promo) {
+        return promo.getActive();
+    }
+    
+    private double applyPromoDiscount(double total, PromoCode promo) {
+        switch (promo.getType()) {
+            case PERCENT:
+                return total * (1.0 - promo.getValue() / 100.0);
+            case FIXED:
+                return total - promo.getValue();
+            default:
+                return total;
+        }
     }
 }

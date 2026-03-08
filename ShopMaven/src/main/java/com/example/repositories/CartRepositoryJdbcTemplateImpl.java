@@ -33,11 +33,16 @@ public class CartRepositoryJdbcTemplateImpl implements CartRepository{
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    private RowMapper<Cart> cartRowMapper = (row, rowNumber) -> Cart.builder()
-            .id(row.getLong("id"))
-            .userId(row.getLong("user_id"))
-            .appliedPromoCodeId(row.getObject("applied_promo_code_id", Long.class))
-            .build();
+    private RowMapper<Cart> cartRowMapper = (row, rowNumber) -> {
+        Long promoId = row.getLong("applied_promo_code_id");
+        if (row.wasNull()) promoId = null;
+
+        return Cart.builder()
+                .id(row.getLong("id"))
+                .userId(row.getLong("user_id"))
+                .appliedPromoCodeId(promoId)
+                .build();
+    };
 
     @Override
     public List<Cart> findAll() {

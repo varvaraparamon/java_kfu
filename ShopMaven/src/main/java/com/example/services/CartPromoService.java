@@ -5,50 +5,57 @@ import com.example.models.PromoCode;
 import com.example.models.PromoUsageType;
 import com.example.repositories.CartRepository;
 import com.example.repositories.PromoCodeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
+@Service
+@RequiredArgsConstructor
+@Transactional
 public class CartPromoService {
 
     private final CartRepository cartRepository;
     private final PromoCodeRepository promoCodeRepository;
 
-    public CartPromoService(CartRepository cartRepository, PromoCodeRepository promoCodeRepository) {
-        this.cartRepository = cartRepository;
-        this.promoCodeRepository = promoCodeRepository;
-    }
-
     public boolean applyPromoCode(Long cartId, String code) {
-        Optional<Cart> cartOpt = cartRepository.findById(cartId);
-        Optional<PromoCode> promoOpt = promoCodeRepository.findByCode(code);
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        PromoCode promo = promoCodeRepository.findByCode(code).orElse(null);
 
-        if (cartOpt.isEmpty() || promoOpt.isEmpty()) return false;
+        if (cart == null || promo == null) return false;
 
-        PromoCode promo = promoOpt.get();
-
-        if (!promo.getActive() || promo.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (!isPromoCodeValid(promo)) {
             return false;
         }
 
-        Cart cart = cartOpt.get();
-        cart.setAppliedPromoCodeId(promo.getId()); 
-        cartRepository.update(cart);
+        cart.setAppliedPromoCodeId(promo.getId());
+        cartRepository.save(cart);
 
-        if (promo.getUsageType().equals(PromoUsageType.SINGLE_USE)) {
+        if (promo.getUsageType() == PromoUsageType.SINGLE_USE) {
             promo.setActive(false);
-            promoCodeRepository.update(promo);
+            promoCodeRepository.save(promo);
         }
 
         return true;
     }
 
     public void removePromoCode(Long cartId) {
-        Optional<Cart> cartOpt = cartRepository.findById(cartId);
-        if (cartOpt.isEmpty()) return;
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        if (cart == null) return;
 
-        Cart cart = cartOpt.get();
         cart.setAppliedPromoCodeId(null);
-        cartRepository.update(cart);
+        cartRepository.save(cart);
+    }
+    
+    public boolean isPromoCodeValidForCart(Long cartId, String code) {
+        PromoCode promo = promoCodeRepository.findByCode(code).orElse(null);
+        if (promo == null) return false;
+        
+        return isPromoCodeValid(promo);
+    }
+    
+    private boolean isPromoCodeValid(PromoCode promo) {
+        return promo.getActive() && (promo.getExpiresAt() == null || promo.getExpiresAt().isAfter(LocalDateTime.now()));
     }
 }

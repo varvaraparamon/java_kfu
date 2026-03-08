@@ -2,7 +2,6 @@ package com.example.services;
 
 import com.example.models.User;
 import com.example.repositories.UserRepositoryJdbcTemplateImpl;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -72,12 +71,11 @@ class UserServiceImplTest {
    Optional<User> userOpt = userService.getById(expectedUser.getId());
 
    assertThat(userOpt, isPresentAndIs(expectedUser));
-   assertThat(userOpt, isPresent());
    assertThat(userOpt.get(), hasProperty("email", equalTo(expectedUser.getEmail())));
   }
 
   @Test
-  @DisplayName("Должен вернуть empty, если пользователя нет")
+  @DisplayName("should return empty for unknown id")
   void should_return_empty_for_unknown_id() {
    Optional<User> result = userService.getById(999L);
 

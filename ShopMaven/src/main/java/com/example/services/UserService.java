@@ -1,10 +1,14 @@
 package com.example.services;
 
+import com.example.models.User;
+import java.util.List;
 import java.util.Optional;
 
-import com.example.models.User;
-
 public interface UserService {
-    void create(User user);
-    Optional<User> getById(Long id);
+    User createUser(User user);
+    User updateUser(Long id, User user);
+    void deleteUser(Long id);
+    Optional<User> getUserById(Long id);
+    Optional<User> getUserByEmail(String email);
+    List<User> getAllUsers();
 }

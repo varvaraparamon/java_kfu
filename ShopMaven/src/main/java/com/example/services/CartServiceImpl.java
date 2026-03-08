@@ -1,50 +1,115 @@
 package com.example.services;
 
-import java.util.Optional;
-
 import com.example.models.Cart;
 import com.example.models.CartProduct;
 import com.example.repositories.CartProductRepository;
 import com.example.repositories.CartRepository;
+import com.example.repositories.ProductRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public class CartServiceImpl implements CartService{
+import java.util.List;
+import java.util.Optional;
 
-    private CartRepository cartRepository;
-    private CartProductRepository cartProductRepository;
-
-    public CartServiceImpl(CartRepository cartRepository, CartProductRepository cartProductRepository) {
-        this.cartRepository = cartRepository;
-        this.cartProductRepository = cartProductRepository;
-    }
-
-    @Override
-    public void create(Long userId) {
-        Cart cart = Cart.builder().userId(userId).build();
-        cartRepository.save(cart);
-    }
-
-    @Override
-    public Optional<Cart> getById(Long id) {
-        return cartRepository.findById(id);
-    }
-
-    @Override
-    public void addProduct(Long cartId, Long productId, Integer amount) {
-
-        cartRepository.findById(cartId)
-            .orElseThrow(() ->
-                    new IllegalArgumentException("Cart not found with id = " + cartId));
-
-        CartProduct cartProduct = CartProduct.builder()
-                .cartId(cartId)
-                .productId(productId)
-                .count(amount)
-                .build();
-
-        cartProductRepository.save(cartProduct);
-
-    }
-
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CartService {
     
+    private final CartRepository cartRepository;
+    private final CartProductRepository cartProductRepository;
+    private final ProductRepository productRepository;
+    private final CartCalculationService calculationService;
+    private final CartPromoService promoService;
 
+    public Cart createCartForUser(Long userId) {
+        Cart cart = Cart.builder()
+                .userId(userId)
+                .build();
+        return cartRepository.save(cart);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Cart> getCartByUserId(Long userId) {
+        return cartRepository.findByUserId(userId);
+    }
+
+    public Cart addProductToCart(Long userId, Long productId, Integer count) {
+        Cart cart = getOrCreateCart(userId);
+        
+        Optional<CartProduct> existing = cartProductRepository
+                .findByCartIdAndProductId(cart.getId(), productId);
+        
+        if (existing.isPresent()) {
+            CartProduct cp = existing.get();
+            cp.setCount(cp.getCount() + count);
+            cartProductRepository.save(cp);
+        } else {
+            CartProduct cartProduct = CartProduct.builder()
+                    .cartId(cart.getId())
+                    .productId(productId)
+                    .count(count)
+                    .build();
+            cartProductRepository.save(cartProduct);
+        }
+        
+        return cart;
+    }
+
+    public Cart removeProductFromCart(Long userId, Long productId) {
+        Cart cart = getOrCreateCart(userId);
+        cartProductRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .ifPresent(cartProductRepository::delete);
+        return cart;
+    }
+
+    public Cart updateProductCount(Long userId, Long productId, Integer count) {
+        Cart cart = getOrCreateCart(userId);
+        
+        if (count <= 0) {
+            return removeProductFromCart(userId, productId);
+        }
+        
+        cartProductRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .ifPresent(cp -> {
+                    cp.setCount(count);
+                    cartProductRepository.save(cp);
+                });
+        
+        return cart;
+    }
+
+    public void clearCart(Long userId) {
+        cartRepository.findByUserId(userId)
+                .ifPresent(cart -> cartProductRepository.deleteByCartId(cart.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CartProduct> getCartProducts(Long cartId) {
+        return cartProductRepository.findByCartId(cartId);
+    }
+    
+    @Transactional(readOnly = true)
+    public double getCartTotal(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .map(cart -> calculationService.calculateCartTotal(cart.getId()))
+                .orElse(0.0);
+    }
+
+    public boolean applyPromoToCart(Long userId, String promoCode) {
+        return cartRepository.findByUserId(userId)
+                .map(cart -> promoService.applyPromoCode(cart.getId(), promoCode))
+                .orElse(false);
+    }
+
+    public void removePromoFromCart(Long userId) {
+        cartRepository.findByUserId(userId)
+                .ifPresent(cart -> promoService.removePromoCode(cart.getId()));
+    }
+
+    private Cart getOrCreateCart(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseGet(() -> createCartForUser(userId));
+    }
 }
