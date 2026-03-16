@@ -6,6 +6,7 @@ import com.example.repositories.CartProductRepository;
 import com.example.repositories.CartRepository;
 import com.example.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,17 +14,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
-public class CartService {
-    
+@RequiredArgsConstructor
+public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartProductRepository cartProductRepository;
-    private final ProductRepository productRepository;
     private final CartCalculationService calculationService;
     private final CartPromoService promoService;
 
     public Cart createCartForUser(Long userId) {
+        Optional<Cart> existing = cartRepository.findByUserId(userId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
         Cart cart = Cart.builder()
                 .userId(userId)
                 .build();
@@ -36,11 +39,12 @@ public class CartService {
     }
 
     public Cart addProductToCart(Long userId, Long productId, Integer count) {
-        Cart cart = getOrCreateCart(userId);
-        
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found"));
+
         Optional<CartProduct> existing = cartProductRepository
                 .findByCartIdAndProductId(cart.getId(), productId);
-        
+
         if (existing.isPresent()) {
             CartProduct cp = existing.get();
             cp.setCount(cp.getCount() + count);
@@ -53,10 +57,11 @@ public class CartService {
                     .build();
             cartProductRepository.save(cartProduct);
         }
-        
+
         return cart;
     }
 
+    @Override
     public Cart removeProductFromCart(Long userId, Long productId) {
         Cart cart = getOrCreateCart(userId);
         cartProductRepository.findByCartIdAndProductId(cart.getId(), productId)
@@ -64,32 +69,35 @@ public class CartService {
         return cart;
     }
 
+    @Override
     public Cart updateProductCount(Long userId, Long productId, Integer count) {
         Cart cart = getOrCreateCart(userId);
-        
+
         if (count <= 0) {
             return removeProductFromCart(userId, productId);
         }
-        
+
         cartProductRepository.findByCartIdAndProductId(cart.getId(), productId)
                 .ifPresent(cp -> {
                     cp.setCount(count);
                     cartProductRepository.save(cp);
                 });
-        
+
         return cart;
     }
 
+    @Override
     public void clearCart(Long userId) {
         cartRepository.findByUserId(userId)
                 .ifPresent(cart -> cartProductRepository.deleteByCartId(cart.getId()));
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<CartProduct> getCartProducts(Long cartId) {
         return cartProductRepository.findByCartId(cartId);
     }
-    
+
     @Transactional(readOnly = true)
     public double getCartTotal(Long userId) {
         return cartRepository.findByUserId(userId)

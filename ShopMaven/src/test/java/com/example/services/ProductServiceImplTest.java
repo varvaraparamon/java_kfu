@@ -55,7 +55,7 @@ class ProductServiceImplTest {
                     .price(120.0)
                     .build();
 
-            productService.create(product);
+            productService.createProduct(product);
 
             assertThat(product.getId(), notNullValue());
             assertThat(product.getId(), greaterThan(0L));
@@ -75,10 +75,10 @@ class ProductServiceImplTest {
                     .price(price)
                     .build();
 
-            productService.create(product);
+            productService.createProduct(product);
 
             assertThat(product.getId(), notNullValue());
-            Optional<Product> savedProduct = productService.getById(product.getId());
+            Optional<Product> savedProduct = productService.getProductById(product.getId());
             assertThat(savedProduct, isPresent());
             assertThat(savedProduct.get(), hasProperty("price", equalTo(price)));
         }
@@ -91,7 +91,7 @@ class ProductServiceImplTest {
         @ParameterizedTest(name = "should find product: {0}")
         @MethodSource("com.example.services.ProductServiceImplTest#existingProductsProvider")
         void should_get_existing_products_by_id(Product expectedProduct) {
-            Optional<Product> productOpt = productService.getById(expectedProduct.getId());
+            Optional<Product> productOpt = productService.getProductById(expectedProduct.getId());
 
             assertThat(productOpt, isPresentAndIs(expectedProduct));
             assertThat(productOpt.get(), hasProperty("name", equalTo(expectedProduct.getName())));
@@ -100,7 +100,7 @@ class ProductServiceImplTest {
 
         @Test
         void should_return_empty_optional_for_non_existing_product() {
-            Optional<Product> productOpt = productService.getById(999L);
+            Optional<Product> productOpt = productService.getProductById(999L);
 
             assertThat(productOpt, isEmpty());
         }

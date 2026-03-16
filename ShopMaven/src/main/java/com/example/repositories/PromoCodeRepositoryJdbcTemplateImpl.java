@@ -2,22 +2,25 @@ package com.example.repositories;
 
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import javax.sql.DataSource;
 
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import com.example.models.PromoCode;
 import com.example.models.PromoType;
 import com.example.models.PromoUsageType;
 
-public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
+@Repository
+public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository {
 
     private static final String SQL_SELECT_ALL = "SELECT id, code, type, \"value\", usage_type, active, expires_at from promocode order by id;";
     
@@ -31,17 +34,23 @@ public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
 
     private static final String SQL_SELECT_BY_CODE =
         "SELECT id, code, type, \"value\", usage_type, active, expires_at FROM promocode WHERE code = ?";
-
+    private static final String SQL_SELECT_ACTIVE_AFTER_DATE =
+        "SELECT id, code, type, \"value\", usage_type, active, expires_at FROM promocode WHERE active = true AND expires_at > ? ORDER BY id";
     private static final String SQL_DELETE_BY_ID =
         "DELETE FROM promocode WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
-    public PromoCodeRepositoryJdbcTemplateImpl(DataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    @Autowired
+    public PromoCodeRepositoryJdbcTemplateImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    private RowMapper<PromoCode> promoRowMapper = (row, i) ->
+    public PromoCodeRepositoryJdbcTemplateImpl(DataSource dataSource) {
+        this(new JdbcTemplate(dataSource));
+    }
+
+    private final RowMapper<PromoCode> promoRowMapper = (row, i) ->
             PromoCode.builder()
                     .id(row.getLong("id"))
                     .code(row.getString("code"))
@@ -49,7 +58,9 @@ public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
                     .value(row.getDouble("value"))
                     .usageType(PromoUsageType.valueOf(row.getString("usage_type")))
                     .active(row.getBoolean("active"))
-                    .expiresAt(row.getTimestamp("expires_at").toLocalDateTime())
+                    .expiresAt(Optional.ofNullable(row.getTimestamp("expires_at"))
+                            .map(Timestamp::toLocalDateTime)
+                            .orElse(null))
                     .build();
 
     @Override
@@ -67,34 +78,39 @@ public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
     }
 
     @Override
-    public void save(PromoCode promoCode) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement statement =
-                            connection.prepareStatement(SQL_INSERT, new String[]{"id"});
-
-                    statement.setString(1, promoCode.getCode());
-                    statement.setString(2, promoCode.getType().name());
-                    statement.setDouble(3, promoCode.getValue());
-                    statement.setString(4, promoCode.getUsageType().name());
-                    statement.setBoolean(5, promoCode.getActive());
+    public PromoCode save(PromoCode promoCode) {
+        if (promoCode.getId() == null) {
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement statement = connection.prepareStatement(SQL_INSERT, new String[]{"id"});
+                statement.setString(1, promoCode.getCode());
+                statement.setString(2, promoCode.getType().name());
+                statement.setDouble(3, promoCode.getValue());
+                statement.setString(4, promoCode.getUsageType().name());
+                statement.setBoolean(5, promoCode.getActive());
+                if (promoCode.getExpiresAt() == null) {
+                    statement.setTimestamp(6, null);
+                } else {
                     statement.setTimestamp(6, Timestamp.valueOf(promoCode.getExpiresAt()));
-
-                    return statement;
-                },
-                keyHolder
-        );
-
-        promoCode.setId(keyHolder.getKey().longValue());
+                }
+                return statement;
+            }, keyHolder);
+            promoCode.setId(keyHolder.getKey().longValue());
+        } else {
+            jdbcTemplate.update(SQL_UPDATE, promoCode.getCode(),
+                    promoCode.getType().name(), promoCode.getValue(), promoCode.getUsageType().name(),
+                    promoCode.getActive(),
+                    promoCode.getExpiresAt() == null ? null : Timestamp.valueOf(promoCode.getExpiresAt()),
+                    promoCode.getId());
+        }
+        return promoCode;
     }
 
     @Override
-    public void update(PromoCode promoCode) {
-        jdbcTemplate.update(SQL_UPDATE, promoCode.getCode(), 
-            promoCode.getType().name(), promoCode.getValue(), promoCode.getUsageType().name(), 
-            promoCode.getActive(), Timestamp.valueOf(promoCode.getExpiresAt()), promoCode.getId());
+    public void delete(PromoCode promoCode) {
+        if (promoCode != null && promoCode.getId() != null) {
+            deleteById(promoCode.getId());
+        }
     }
 
     @Override
@@ -113,5 +129,8 @@ public class PromoCodeRepositoryJdbcTemplateImpl implements PromoCodeRepository{
         }
     }
 
-
+    @Override
+    public List<PromoCode> findByActiveTrueAndExpiresAtAfter(LocalDateTime dateTime) {
+        return jdbcTemplate.query(SQL_SELECT_ACTIVE_AFTER_DATE, promoRowMapper, Timestamp.valueOf(dateTime));
+    }
 }

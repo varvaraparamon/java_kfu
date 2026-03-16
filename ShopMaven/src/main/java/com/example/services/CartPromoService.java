@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Transactional
 public class CartPromoService {
-
     private final CartRepository cartRepository;
     private final PromoCodeRepository promoCodeRepository;
 
@@ -47,14 +46,14 @@ public class CartPromoService {
         cart.setAppliedPromoCodeId(null);
         cartRepository.save(cart);
     }
-    
+
     public boolean isPromoCodeValidForCart(Long cartId, String code) {
         PromoCode promo = promoCodeRepository.findByCode(code).orElse(null);
         if (promo == null) return false;
-        
+
         return isPromoCodeValid(promo);
     }
-    
+
     private boolean isPromoCodeValid(PromoCode promo) {
         return promo.getActive() && (promo.getExpiresAt() == null || promo.getExpiresAt().isAfter(LocalDateTime.now()));
     }

@@ -55,7 +55,7 @@ class UserServiceImplTest {
            .age(25)
            .build();
 
-   userService.create(newUser);
+   userService.createUser(newUser);
 
    assertThat(newUser.getId(), allOf(notNullValue(), greaterThan(0L)));
   }
@@ -68,7 +68,7 @@ class UserServiceImplTest {
   @ParameterizedTest(name = "should find user with id={0}")
   @MethodSource("com.example.services.UserServiceImplTest#existingUsersProvider")
   void should_get_existing_users_by_id(User expectedUser) {
-   Optional<User> userOpt = userService.getById(expectedUser.getId());
+   Optional<User> userOpt = userService.getUserById(expectedUser.getId());
 
    assertThat(userOpt, isPresentAndIs(expectedUser));
    assertThat(userOpt.get(), hasProperty("email", equalTo(expectedUser.getEmail())));
@@ -77,7 +77,7 @@ class UserServiceImplTest {
   @Test
   @DisplayName("should return empty for unknown id")
   void should_return_empty_for_unknown_id() {
-   Optional<User> result = userService.getById(999L);
+   Optional<User> result = userService.getUserById(999L);
 
    assertThat(result, isEmpty());
   }

@@ -12,13 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CartCalculationService {
-
     private final CartRepository cartRepository;
     private final CartProductRepository cartProductRepository;
     private final ProductRepository productRepository;
@@ -30,7 +30,7 @@ public class CartCalculationService {
 
         double total = 0.0;
         List<CartProduct> items = cartProductRepository.findByCartId(cart.getId());
-        
+
         for (CartProduct item : items) {
             Product product = productRepository.findById(item.getProductId()).orElse(null);
             if (product != null) {
@@ -47,7 +47,7 @@ public class CartCalculationService {
 
         return Math.max(total, 0.0);
     }
-    
+
     public double calculateSubtotal(Long cartId) {
         Cart cart = cartRepository.findById(cartId).orElse(null);
         if (cart == null) return 0.0;
@@ -59,17 +59,17 @@ public class CartCalculationService {
                 })
                 .sum();
     }
-    
+
     public int getTotalItemsCount(Long cartId) {
         return cartProductRepository.findByCartId(cartId).stream()
                 .mapToInt(CartProduct::getCount)
                 .sum();
     }
-    
+
     private boolean isPromoCodeValid(PromoCode promo) {
-        return promo.getActive();
+        return promo.getExpiresAt() == null || promo.getExpiresAt().isAfter(LocalDateTime.now());
     }
-    
+
     private double applyPromoDiscount(double total, PromoCode promo) {
         switch (promo.getType()) {
             case PERCENT:

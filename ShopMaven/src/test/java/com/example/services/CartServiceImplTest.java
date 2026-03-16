@@ -11,6 +11,8 @@ import com.example.models.Cart;
 import com.example.models.CartProduct;
 import com.example.repositories.CartRepositoryJdbcTemplateImpl;
 import com.example.repositories.CartProductRepositoryJdbcTemplateImpl;
+import com.example.repositories.ProductRepositoryJdbcTemplateImpl;
+import com.example.repositories.PromoCodeRepositoryJdbcTemplateImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,8 +40,15 @@ class CartServiceImplTest {
         CartRepositoryJdbcTemplateImpl cartRepository =
                 new CartRepositoryJdbcTemplateImpl(embeddedDatabase);
         cartProductRepository = new CartProductRepositoryJdbcTemplateImpl(embeddedDatabase);
+        ProductRepositoryJdbcTemplateImpl productRepository =
+                new ProductRepositoryJdbcTemplateImpl(embeddedDatabase);
+        PromoCodeRepositoryJdbcTemplateImpl promoCodeRepository =
+                new PromoCodeRepositoryJdbcTemplateImpl(embeddedDatabase);
+        CartCalculationService calculationService = new CartCalculationService(
+                cartRepository, cartProductRepository, productRepository, promoCodeRepository);
+        CartPromoService promoService = new CartPromoService(cartRepository, promoCodeRepository);
 
-        cartService = new CartServiceImpl(cartRepository, cartProductRepository);
+        cartService = new CartServiceImpl(cartRepository, cartProductRepository, calculationService, promoService);
     }
 
     @AfterEach
@@ -53,9 +62,9 @@ class CartServiceImplTest {
 
         @Test
         void should_create_cart_for_user() {
-            cartService.create(3L);
+            cartService.createCartForUser(3L);
 
-            Optional<Cart> cartOpt = cartService.getById(3L);
+            Optional<Cart> cartOpt = cartService.getCartByUserId(3L);
 
             assertThat(cartOpt, isPresent());
             assertThat(cartOpt.get(), hasProperty("userId", equalTo(3L)));
@@ -68,9 +77,9 @@ class CartServiceImplTest {
                 "3"
         })
         void should_create_carts_for_different_users(Long userId) {
-            cartService.create(userId);
+            cartService.createCartForUser(userId);
 
-            Optional<Cart> cartOpt = cartService.getById(userId);
+            Optional<Cart> cartOpt = cartService.getCartByUserId(userId);
             assertThat(cartOpt, isPresent());
             assertThat(cartOpt.get(), hasProperty("userId", equalTo(userId)));
         }
@@ -82,7 +91,7 @@ class CartServiceImplTest {
 
         @Test
         void should_get_existing_cart_by_id() {
-            Optional<Cart> cartOpt = cartService.getById(1L);
+            Optional<Cart> cartOpt = cartService.getCartByUserId(1L);
 
             assertThat(cartOpt, isPresent());
             assertThat(cartOpt.get(), hasProperty("userId", equalTo(1L)));
@@ -90,7 +99,7 @@ class CartServiceImplTest {
 
         @Test
         void should_return_empty_optional_for_non_existing_cart() {
-            Optional<Cart> cartOpt = cartService.getById(999L);
+            Optional<Cart> cartOpt = cartService.getCartByUserId(999L);
 
             assertThat(cartOpt, isEmpty());
         }
@@ -110,7 +119,7 @@ class CartServiceImplTest {
             Long cartId = 2L;
             int initialSize = cartProductRepository.findByCartId(cartId).size();
 
-            cartService.addProduct(cartId, productId, quantity);
+            cartService.addProductToCart(cartId, productId, quantity);
 
             List<CartProduct> cartProducts = cartProductRepository.findByCartId(cartId);
             assertThat(cartProducts, hasSize(initialSize + 1));
@@ -126,9 +135,9 @@ class CartServiceImplTest {
         void should_add_multiple_products_to_same_cart() {
             Long cartId = 2L;
 
-            cartService.addProduct(cartId, 1L, 2);
-            cartService.addProduct(cartId, 2L, 3);
-            cartService.addProduct(cartId, 3L, 1);
+            cartService.addProductToCart(cartId, 1L, 2);
+            cartService.addProductToCart(cartId, 2L, 3);
+            cartService.addProductToCart(cartId, 3L, 1);
 
             List<CartProduct> cartProducts = cartProductRepository.findByCartId(cartId);
             assertThat(cartProducts, hasSize(3));
@@ -137,7 +146,7 @@ class CartServiceImplTest {
         @Test
         void should_throw_exception_when_adding_product_to_non_existing_cart() {
             assertThrows(IllegalArgumentException.class,
-                    () -> cartService.addProduct(999L, 1L, 1));
+                    () -> cartService.addProductToCart(999L, 1L, 1));
         }
     }
 }

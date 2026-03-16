@@ -1,7 +1,6 @@
 package com.example.services;
 
 import com.example.models.PromoCode;
-import com.example.models.PromoType;
 import com.example.repositories.PromoCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

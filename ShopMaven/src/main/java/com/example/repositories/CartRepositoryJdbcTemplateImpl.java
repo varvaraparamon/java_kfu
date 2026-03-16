@@ -1,46 +1,54 @@
 package com.example.repositories;
 
 import java.sql.PreparedStatement;
-
 import java.util.List;
 import java.util.Optional;
-
 import javax.sql.DataSource;
 
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
 import com.example.models.Cart;
 
-public class CartRepositoryJdbcTemplateImpl implements CartRepository{
+@Repository
+public class CartRepositoryJdbcTemplateImpl implements CartRepository {
 
-    private static final String SQL_SELECT_ALL = "SELECT id, user_id, applied_promo_code_id from cart order by id;";
-    
-    private static final String SQL_SELECT_BY_ID = "SELECT id, user_id, applied_promo_code_id from cart where id = ?";
-
-    private static final String SQL_INSERT = "insert into " +
-            "cart(user_id) values (?)";
-
-    private static final String SQL_UPDATE = "update cart set applied_promo_code_id = ? " +
-            "where id = ?";
+    private static final String SQL_SELECT_ALL =
+            "SELECT id, user_id, applied_promo_code_id FROM cart ORDER BY id";
+    private static final String SQL_SELECT_BY_ID =
+            "SELECT id, user_id, applied_promo_code_id FROM cart WHERE id = ?";
+    private static final String SQL_SELECT_BY_USER_ID =
+            "SELECT id, user_id, applied_promo_code_id FROM cart WHERE user_id = ?";
+    private static final String SQL_INSERT =
+            "INSERT INTO cart(user_id, applied_promo_code_id) VALUES (?, ?)";
+    private static final String SQL_UPDATE =
+            "UPDATE cart SET user_id = ?, applied_promo_code_id = ? WHERE id = ?";
+    private static final String SQL_DELETE_BY_ID =
+            "DELETE FROM cart WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
-    public CartRepositoryJdbcTemplateImpl(DataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+    @Autowired
+    public CartRepositoryJdbcTemplateImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    private RowMapper<Cart> cartRowMapper = (row, rowNumber) -> {
-        Long promoId = row.getLong("applied_promo_code_id");
-        if (row.wasNull()) promoId = null;
+    public CartRepositoryJdbcTemplateImpl(DataSource dataSource) {
+        this(new JdbcTemplate(dataSource));
+    }
 
+    private final RowMapper<Cart> cartRowMapper = (row, rowNum) -> {
+        long promoId = row.getLong("applied_promo_code_id");
+        boolean promoWasNull = row.wasNull();
         return Cart.builder()
                 .id(row.getLong("id"))
                 .userId(row.getLong("user_id"))
-                .appliedPromoCodeId(promoId)
+                .appliedPromoCodeId(promoWasNull ? null : promoId)
                 .build();
     };
 
@@ -59,35 +67,44 @@ public class CartRepositoryJdbcTemplateImpl implements CartRepository{
     }
 
     @Override
-    public void save(Cart cart) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement statement = connection.prepareStatement(SQL_INSERT, new String[]{"id"});
-
-                statement.setLong(1, cart.getUserId());
-                return statement;
-                }, keyHolder);
-
-        cart.setId(keyHolder.getKey().longValue());
+    public Optional<Cart> findByUserId(Long userId) {
+        try {
+            return Optional.of(jdbcTemplate.queryForObject(SQL_SELECT_BY_USER_ID, cartRowMapper, userId));
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
-    public void update(Cart cart) {
-        jdbcTemplate.update(SQL_UPDATE, cart.getAppliedPromoCodeId(), cart.getId());
+    public Cart save(Cart cart) {
+        if (cart.getId() == null) {
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement ps = connection.prepareStatement(SQL_INSERT, new String[]{"id"});
+                ps.setLong(1, cart.getUserId());
+                if (cart.getAppliedPromoCodeId() == null) {
+                    ps.setObject(2, null);
+                } else {
+                    ps.setLong(2, cart.getAppliedPromoCodeId());
+                }
+                return ps;
+            }, keyHolder);
+            cart.setId(keyHolder.getKey().longValue());
+        } else {
+            jdbcTemplate.update(SQL_UPDATE, cart.getUserId(), cart.getAppliedPromoCodeId(), cart.getId());
+        }
+        return cart;
     }
 
     @Override
-    public void delete(Cart account) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+    public void delete(Cart cart) {
+        if (cart != null && cart.getId() != null) {
+            deleteById(cart.getId());
+        }
     }
 
     @Override
     public void deleteById(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteById'");
+        jdbcTemplate.update(SQL_DELETE_BY_ID, id);
     }
-
 }

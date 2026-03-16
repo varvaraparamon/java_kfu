@@ -1,105 +1,165 @@
 package com.example;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.example.models.*;
-import com.example.repositories.*;
-import com.example.services.*;
+import com.example.di.AppConfig;
+import com.example.models.Cart;
+import com.example.models.CartProduct;
+import com.example.models.Product;
+import com.example.models.PromoCode;
+import com.example.models.PromoType;
+import com.example.models.PromoUsageType;
+import com.example.models.User;
+import com.example.services.CartCalculationService;
+import com.example.services.CartPromoService;
+import com.example.services.CartService;
+import com.example.services.ProductService;
+import com.example.services.PromoCodeService;
+import com.example.services.UserService;
 
 public class Main {
 
     public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        String suffix = String.valueOf(System.currentTimeMillis() % 1_000_000);
 
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl("jdbc:postgresql://localhost:5442/app_db");
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("postgres");
-
-        UserRepository userRepository =
-                new UserRepositoryJdbcTemplateImpl(dataSource);
-        ProductRepository productRepository =
-                new ProductRepositoryJdbcTemplateImpl(dataSource);
-        CartRepository cartRepository =
-                new CartRepositoryJdbcTemplateImpl(dataSource);
-        CartProductRepository cartProductRepository =
-                new CartProductRepositoryJdbcTemplateImpl(dataSource);
-        PromoCodeRepository promoCodeRepository = 
-                new PromoCodeRepositoryJdbcTemplateImpl(dataSource);
-
-
-        UserService userService =
-                new UserServiceImpl(userRepository);
-        ProductService productService =
-                new ProductServiceImpl(productRepository);
-        CartService cartService =
-                new CartServiceImpl(cartRepository, cartProductRepository);
-        PromoCodeService promoCodeService =
-                new PromoCodeServiceImpl(promoCodeRepository);
-        CartPromoService cartPromoService = 
-                new CartPromoService(cartRepository, promoCodeRepository);
-        CartCalculationService cartCalculationService = 
-                new CartCalculationService(
-                        cartRepository,
-                        cartProductRepository,
-                        productRepository,
-                        promoCodeRepository
-                );
+        UserService userService = context.getBean(UserService.class);
+        ProductService productService = context.getBean(ProductService.class);
+        CartService cartService = context.getBean(CartService.class);
+        PromoCodeService promoCodeService = context.getBean(PromoCodeService.class);
+        CartPromoService cartPromoService = context.getBean(CartPromoService.class);
+        CartCalculationService cartCalculationService = context.getBean(CartCalculationService.class);
 
         User user = User.builder()
                 .name("Ivan")
                 .surname("Ivanov")
-                .phone("89990001122")
-                .email("ivan@mail.com")
+                .phone("8999" + suffix)
+                .email("ivan" + suffix + "@mail.com")
                 .age(30)
                 .build();
-
-        userService.create(user);
+        userService.createUser(user);
         System.out.println("Создан пользователь, id = " + user.getId());
+
+        user.setAge(31);
+        userService.updateUser(user.getId(), user);
+        System.out.println("Пользователь обновлён, возраст = 31");
+
+        userService.getUserById(user.getId()).ifPresent(u ->
+                System.out.println("Пользователь по id, email = " + u.getEmail()));
+        userService.getUserByEmail(user.getEmail()).ifPresent(u ->
+                System.out.println("Пользователь по email, id = " + u.getId()));
+        System.out.println("Всего пользователей = " + userService.getAllUsers().size());
+
+        User userToDelete = User.builder()
+                .name("Petr")
+                .surname("Petrov")
+                .phone("8777" + suffix)
+                .email("petr" + suffix + "@mail.com")
+                .age(25)
+                .build();
+        userService.createUser(userToDelete);
+        userService.deleteUser(userToDelete.getId());
+        System.out.println("Пользователь удалён, id = " + userToDelete.getId());
 
         Product product = Product.builder()
                 .name("Milk")
                 .description("1 liter")
                 .price(90.5)
                 .build();
-
-        productService.create(product);
+        productService.createProduct(product);
         System.out.println("Создан продукт, id = " + product.getId());
 
-        cartService.create(user.getId());
-        Cart cart = cartService.getById(1L)
-                .orElseThrow(() -> new RuntimeException("Корзина не найдена"));
+        product.setPrice(95.0);
+        productService.updateProduct(product.getId(), product);
+        System.out.println("Продукт обновлён, цена = 95.0");
 
+        productService.getProductById(product.getId()).ifPresent(p ->
+                System.out.println("Продукт по id, name = " + p.getName()));
+        System.out.println("Всего продуктов = " + productService.getAllProducts().size());
+
+        Product searchProduct = Product.builder()
+                .name("Milk chocolate")
+                .description("100g")
+                .price(120.0)
+                .build();
+        productService.createProduct(searchProduct);
+        System.out.println("Найдено продуктов по названию = " +
+                productService.searchProductsByName("milk").size());
+
+        productService.deleteProduct(searchProduct.getId());
+        System.out.println("Продукт удалён, id = " + searchProduct.getId());
+
+        Cart cart = cartService.createCartForUser(user.getId());
+        cart = cartService.getCartByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Корзина не найдена"));
         System.out.println("Создана корзина, id = " + cart.getId());
 
-        cartService.addProduct(cart.getId(), product.getId(), 3);
-
+        cartService.addProductToCart(user.getId(), product.getId(), 3);
         System.out.println("Товар добавлен в корзину");
 
+        cartService.updateProductCount(user.getId(), product.getId(), 5);
+        System.out.println("Количество товара обновлено до 5");
+
+        List<CartProduct> cartProducts = cartService.getCartProducts(cart.getId());
+        System.out.println("Товаров в корзине = " + cartProducts.size());
+
+        cartService.removeProductFromCart(user.getId(), product.getId());
+        System.out.println("Товар удалён из корзины");
+
         PromoCode promo = PromoCode.builder()
-                .code("PROMO10")
-                .type(PromoType.PERCENT)        
-                .value(10.0)                    
+                .code("PROMO" + suffix)
+                .type(PromoType.PERCENT)
+                .value(10.0)
                 .usageType(PromoUsageType.SINGLE_USE)
                 .active(true)
-                .expiresAt(LocalDateTime.now().plusDays(7)) 
+                .expiresAt(LocalDateTime.now().plusDays(7))
                 .build();
-
-        promoCodeService.create(promo);
+        promoCodeService.createPromoCode(promo);
         System.out.println("Создан промокод: " + promo.getCode());
 
-        boolean applied = cartPromoService.applyPromoCode(cart.getId(), "PROMO10");
-        System.out.println("Промокод применён: " + applied);
+        promo.setValue(15.0);
+        promoCodeService.updatePromoCode(promo.getId(), promo);
+        System.out.println("Промокод обновлён: значение = 15.0");
 
+        promoCodeService.getPromoCodeById(promo.getId()).ifPresent(p ->
+                System.out.println("Промокод по id, code = " + p.getCode()));
+        promoCodeService.getPromoCodeByCode(promo.getCode()).ifPresent(p ->
+                System.out.println("Промокод по code, id = " + p.getId()));
+        System.out.println("Активных промокодов = " + promoCodeService.getAllActivePromoCodes().size());
+        System.out.println("Промокод валиден = " + promoCodeService.isValidPromoCode(promo.getCode()));
+
+        boolean applied = cartPromoService.applyPromoCode(cart.getId(), promo.getCode());
+        System.out.println("Промокод применён: " + applied);
+        System.out.println("Промокод валиден для корзины = " +
+                cartPromoService.isPromoCodeValidForCart(cart.getId(), promo.getCode()));
+
+        double subtotal = cartCalculationService.calculateSubtotal(cart.getId());
         double total = cartCalculationService.calculateCartTotal(cart.getId());
-        System.out.println("Итоговая стоимость корзины с промокодом: " + total);
+        int itemsCount = cartCalculationService.getTotalItemsCount(cart.getId());
+        System.out.println("Промежуточная сумма = " + subtotal);
+        System.out.println("Итого с промокодом = " + total);
+        System.out.println("Количество товаров = " + itemsCount);
 
         cartPromoService.removePromoCode(cart.getId());
-        System.out.println("Промокод отменён");
+        System.out.println("Промокод удалён из корзины");
 
-        double totalWithoutPromo = cartCalculationService.calculateCartTotal(cart.getId());
-        System.out.println("Стоимость корзины без промокода: " + totalWithoutPromo);
+        PromoCode promoToDelete = PromoCode.builder()
+                .code("DEL" + suffix)
+                .type(PromoType.FIXED)
+                .value(20.0)
+                .usageType(PromoUsageType.MULTI_USE)
+                .active(true)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        promoCodeService.createPromoCode(promoToDelete);
+        promoCodeService.deletePromoCode(promoToDelete.getId());
+        System.out.println("Промокод удалён, id = " + promoToDelete.getId());
+
+        cartService.clearCart(user.getId());
+        System.out.println("Корзина очищена");
     }
 }

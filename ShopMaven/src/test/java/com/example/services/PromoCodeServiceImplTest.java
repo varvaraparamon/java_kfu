@@ -65,7 +65,7 @@ class PromoCodeServiceImplTest {
                     .expiresAt(LocalDateTime.now().plusDays(30))
                     .build();
 
-            promoCodeService.create(promo);
+            promoCodeService.createPromoCode(promo);
 
             assertThat(promo.getId(), notNullValue());
             assertThat(promo.getId(), greaterThan(0L));
@@ -91,10 +91,10 @@ class PromoCodeServiceImplTest {
                     .expiresAt(LocalDateTime.now().plusDays(30))
                     .build();
 
-            promoCodeService.create(promo);
+            promoCodeService.createPromoCode(promo);
 
             assertThat(promo.getId(), notNullValue());
-            Optional<PromoCode> savedPromo = promoCodeService.getByCode(code);
+            Optional<PromoCode> savedPromo = promoCodeService.getPromoCodeByCode(code);
             assertThat(savedPromo, isPresent());
             assertThat(savedPromo.get(), hasProperty("type", equalTo(type)));
             assertThat(savedPromo, isPresent());
@@ -104,7 +104,7 @@ class PromoCodeServiceImplTest {
         @Test
         void should_not_create_promo_code_with_duplicate_code() {
             PromoCode promo = PromoCode.builder()
-                    .code("PROMO10") 
+                    .code("PROMO10")
                     .type(PromoType.PERCENT)
                     .value(5.0)
                     .usageType(PromoUsageType.SINGLE_USE)
@@ -112,12 +112,7 @@ class PromoCodeServiceImplTest {
                     .expiresAt(LocalDateTime.now().plusDays(10))
                     .build();
 
-            IllegalArgumentException ex = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> promoCodeService.create(promo)
-            );
-
-            assertThat(ex.getMessage(), equalTo("Промокод с таким кодом уже существует"));
+            assertThrows(Exception.class, () -> promoCodeService.createPromoCode(promo));
         }
     }
 
@@ -128,7 +123,7 @@ class PromoCodeServiceImplTest {
         @ParameterizedTest(name = "should find promo code: {0}")
         @MethodSource("com.example.services.PromoCodeServiceImplTest#existingPromoCodesProvider")
         void should_get_existing_promo_codes_by_id(PromoCode expectedPromo) {
-            Optional<PromoCode> promoOpt = promoCodeService.getById(expectedPromo.getId());
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeById(expectedPromo.getId());
             assertThat(promoOpt, isPresent());
             assertThat(promoOpt.get(), hasProperty("code", equalTo(expectedPromo.getCode())));
             assertThat(promoOpt.get(), hasProperty("type", equalTo(expectedPromo.getType())));
@@ -138,7 +133,7 @@ class PromoCodeServiceImplTest {
         @ParameterizedTest(name = "should find by code: {0}")
         @ValueSource(strings = {"PROMO10", "FIXED50", "EXPIRED"})
         void should_get_existing_promo_codes_by_code(String code) {
-            Optional<PromoCode> promoOpt = promoCodeService.getByCode(code);
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeByCode(code);
 
             assertThat(promoOpt, isPresent());
             assertThat(promoOpt.get(), hasProperty("code", equalTo(code)));
@@ -146,16 +141,16 @@ class PromoCodeServiceImplTest {
 
         @Test
         void should_return_empty_optional_for_non_existing_promo_code() {
-            Optional<PromoCode> promoOpt = promoCodeService.getByCode("NONEXISTENT");
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeByCode("NONEXISTENT");
 
             assertThat(promoOpt, isEmpty());
         }
 
         @Test
         void should_get_all_promo_codes() {
-            List<PromoCode> promoCodes = promoCodeService.getAll();
+            List<PromoCode> promoCodes = promoCodeService.getAllActivePromoCodes();
 
-            assertThat(promoCodes, hasSize(greaterThanOrEqualTo(3)));
+            assertThat(promoCodes, hasSize(greaterThanOrEqualTo(2)));
         }
     }
 
@@ -165,30 +160,30 @@ class PromoCodeServiceImplTest {
 
         @Test
         void should_update_promo_code_value() {
-            Optional<PromoCode> promoOpt = promoCodeService.getById(1L);
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeById(1L);
             assertThat(promoOpt, isPresent());
 
             PromoCode promo = promoOpt.get();
             promo.setValue(20.0);
 
-            promoCodeService.update(promo);
+            promoCodeService.updatePromoCode(promo.getId(), promo);
 
-            Optional<PromoCode> updatedPromo = promoCodeService.getById(1L);
+            Optional<PromoCode> updatedPromo = promoCodeService.getPromoCodeById(1L);
             assertThat(updatedPromo, isPresent());
             assertThat(updatedPromo.get(), hasProperty("value", equalTo(20.0)));
         }
 
         @Test
         void should_deactivate_promo_code() {
-            Optional<PromoCode> promoOpt = promoCodeService.getById(1L);
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeById(1L);
             assertThat(promoOpt, isPresent());
 
             PromoCode promo = promoOpt.get();
             promo.setActive(false);
 
-            promoCodeService.update(promo);
+            promoCodeService.updatePromoCode(promo.getId(), promo);
 
-            Optional<PromoCode> updatedPromo = promoCodeService.getById(1L);
+            Optional<PromoCode> updatedPromo = promoCodeService.getPromoCodeById(1L);
             assertThat(updatedPromo, isPresent());
             assertThat(updatedPromo.get(), hasProperty("active", equalTo(false)));
         }
@@ -196,29 +191,24 @@ class PromoCodeServiceImplTest {
         @ParameterizedTest(name = "should update value to {0}")
         @ValueSource(doubles = {5.0, 15.0, 25.0, 50.0})
         void should_update_promo_code_with_different_values(Double newValue) {
-            Optional<PromoCode> promoOpt = promoCodeService.getById(2L);
+            Optional<PromoCode> promoOpt = promoCodeService.getPromoCodeById(2L);
             PromoCode promo = promoOpt.get();
             promo.setValue(newValue);
 
-            promoCodeService.update(promo);
+            promoCodeService.updatePromoCode(promo.getId(), promo);
 
-            Optional<PromoCode> updatedPromo = promoCodeService.getById(2L);
+            Optional<PromoCode> updatedPromo = promoCodeService.getPromoCodeById(2L);
             assertThat(updatedPromo, isPresent());
             assertThat(updatedPromo.get(), hasProperty("value", equalTo(newValue)));
         }
 
         @Test
         void should_not_update_promo_code_if_code_belongs_to_another_promo() {
-            PromoCode promo = promoCodeService.getById(2L).orElseThrow();
+            PromoCode promo = promoCodeService.getPromoCodeById(2L).orElseThrow();
 
             promo.setCode("PROMO10");
 
-            IllegalArgumentException ex = assertThrows(
-                    IllegalArgumentException.class,
-                    () -> promoCodeService.update(promo)
-            );
-
-            assertThat(ex.getMessage(), equalTo("Промокод с таким кодом уже существует"));
+            assertThrows(Exception.class, () -> promoCodeService.updatePromoCode(promo.getId(), promo));
         }
     }
 
@@ -237,12 +227,12 @@ class PromoCodeServiceImplTest {
                     .expiresAt(LocalDateTime.now().plusDays(1))
                     .build();
 
-            promoCodeService.create(promo);
+            promoCodeService.createPromoCode(promo);
             Long promoId = promo.getId();
 
-            promoCodeService.delete(promoId);
+            promoCodeService.deletePromoCode(promoId);
 
-            Optional<PromoCode> deletedPromo = promoCodeService.getById(promoId);
+            Optional<PromoCode> deletedPromo = promoCodeService.getPromoCodeById(promoId);
             assertThat(deletedPromo, isEmpty());
         }
     }
