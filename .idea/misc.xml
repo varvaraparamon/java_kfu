@@ -5,7 +5,15 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/ShopMaven/pom.xml" />
+        <option value="$PROJECT_DIR$/ShopMavenXML/pom.xml" />
+        <option value="$PROJECT_DIR$/game/pom.xml" />
       </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/ShopMaven/pom.xml" />
+        <option value="$PROJECT_DIR$/ShopMavenXML/pom.xml" />
+      </set>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="graalvm-jdk-21" project-jdk-type="JavaSDK">

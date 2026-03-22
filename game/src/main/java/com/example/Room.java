@@ -1,14 +1,20 @@
 package com.example;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Room {
     private static final int MAX_PLAYERS = 2;
     private List<ClientHandler> players = new ArrayList<>();
     private int roomId;
     private ClientHandler currentPlayer;
-    private String[][] board = new String[3][3]; 
+    private String[][] board = new String[3][3];
     private boolean gameActive = false;
     private int movesCount = 0;
 
@@ -30,7 +36,7 @@ public class Room {
         if (players.size() < MAX_PLAYERS) {
             players.add(player);
             player.setRoom(this);
-            
+
             if (players.size() == 1) {
                 player.setPlayerSymbol("X");
                 player.sendMessage("Вы в комнате " + roomId + ". Вы играете за X. Ожидаем второго игрока...");
@@ -63,20 +69,20 @@ public class Room {
     }
 
     public boolean makeMove(String move, String symbol) {
-        int row = move.charAt(1) - '1';     
-        int col = Character.toUpperCase(move.charAt(0)) - 'A'; 
-        
+        int row = move.charAt(1) - '1';
+        int col = Character.toUpperCase(move.charAt(0)) - 'A';
+
         if (!board[row][col].equals(".")) {
-            return false; 
+            return false;
         }
-        
+
         board[row][col] = symbol;
         movesCount++;
         return true;
     }
 
     public String checkWinner() {
-   
+
         for (int i = 0; i < 3; i++) {
             if (!board[i][0].equals(".") && board[i][0].equals(board[i][1]) && board[i][1].equals(board[i][2])) {
                 return board[i][0];
@@ -99,7 +105,7 @@ public class Room {
         if (movesCount == 9) {
             return "DRAW";
         }
-        return null; 
+        return null;
     }
 
     public void switchTurn() {

@@ -1,10 +1,14 @@
 package com.example;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
 public class MainServer {
 
     public static void main(String[] args) {
-        GameServer server = new GameServer();
-        server.start(7777);
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.example")) {
+            GameServer server = context.getBean(GameServer.class);
+            server.start(7777);
+        }
     }
 
 }

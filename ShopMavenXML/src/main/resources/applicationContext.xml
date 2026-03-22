@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="jdbcUrl" value="${db.url}"/>
+        <property name="driverClassName" value="${db.driver-class-name}"/>
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+        <property name="maximumPoolSize" value="${db.hikari.max-pool-size}"/>
+    </bean>
+
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+        <constructor-arg ref="hikariConfig"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="search*" read-only="true"/>
+            <tx:method name="is*" read-only="true"/>
+            <tx:method name="calculate*" read-only="true"/>
+            <tx:method name="*" />
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="serviceMethods" expression="execution(* com.example.services..*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods"/>
+    </aop:config>
+
+    <bean id="cartRepository" class="com.example.repositories.CartRepositoryJdbcTemplateImpl">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+    <bean id="cartProductRepository" class="com.example.repositories.CartProductRepositoryJdbcTemplateImpl">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+    <bean id="productRepository" class="com.example.repositories.ProductRepositoryJdbcTemplateImpl">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+    <bean id="promoCodeRepository" class="com.example.repositories.PromoCodeRepositoryJdbcTemplateImpl">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+    <bean id="userRepository" class="com.example.repositories.UserRepositoryJdbcTemplateImpl">
+        <constructor-arg ref="jdbcTemplate"/>
+    </bean>
+
+    <bean id="cartCalculationService" class="com.example.services.CartCalculationService">
+        <constructor-arg ref="cartRepository"/>
+        <constructor-arg ref="cartProductRepository"/>
+        <constructor-arg ref="productRepository"/>
+        <constructor-arg ref="promoCodeRepository"/>
+    </bean>
+    <bean id="cartPromoService" class="com.example.services.CartPromoService">
+        <constructor-arg ref="cartRepository"/>
+        <constructor-arg ref="promoCodeRepository"/>
+    </bean>
+    <bean id="cartService" class="com.example.services.CartServiceImpl">
+        <constructor-arg ref="cartRepository"/>
+        <constructor-arg ref="cartProductRepository"/>
+        <constructor-arg ref="cartCalculationService"/>
+        <constructor-arg ref="cartPromoService"/>
+    </bean>
+    <bean id="productService" class="com.example.services.ProductServiceImpl">
+        <constructor-arg ref="productRepository"/>
+    </bean>
+    <bean id="promoCodeService" class="com.example.services.PromoCodeServiceImpl">
+        <constructor-arg ref="promoCodeRepository"/>
+    </bean>
+    <bean id="userService" class="com.example.services.UserServiceImpl">
+        <constructor-arg ref="userRepository"/>
+    </bean>
+
+</beans>

@@ -9,11 +9,8 @@ public class MainClient {
         try {
             Socket client = new Socket("127.0.0.1", 7777);
             Scanner scanner = new Scanner(System.in);
-
             PrintWriter toServer = new PrintWriter(new OutputStreamWriter(client.getOutputStream()), true);
-
             BufferedReader fromServer = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
             new Thread(() -> {
                 while (true) {
                     try {
@@ -24,13 +21,10 @@ public class MainClient {
                     }
                 }
             }).start();
-
             while (true) {
                 String messageToServer = scanner.nextLine();
                 toServer.println(messageToServer);
             }
-
-
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
@@ -38,4 +32,3 @@ public class MainClient {
 
     }
 }
-

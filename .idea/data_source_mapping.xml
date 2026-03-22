@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/ShopMaven/src/main/java/com/example/repositories/CartProductRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMaven/src/main/java/com/example/repositories/ProductRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMaven/src/main/java/com/example/repositories/PromoCodeRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMaven/src/main/java/com/example/repositories/UserRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMaven/src/main/resources/schema.sql" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
     <file url="file://$PROJECT_DIR$/ShopMaven/src/test/resources/sql/data.sql" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
     <file url="file://$PROJECT_DIR$/ShopMaven/src/test/resources/sql/schema.sql" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMavenXML/src/main/java/com/example/repositories/CartProductRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMavenXML/src/main/java/com/example/repositories/CartRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMavenXML/src/main/java/com/example/repositories/ProductRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMavenXML/src/main/java/com/example/repositories/PromoCodeRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
+    <file url="file://$PROJECT_DIR$/ShopMavenXML/src/main/java/com/example/repositories/UserRepositoryJdbcTemplateImpl.java" value="0616ec23-4ede-4cea-bf8e-920153378a06" />
   </component>
 </project>
