@@ -5,7 +5,7 @@ public class Cart {
 
     private Long id;
     private Long userId;
-    private Long[] cartProductsId = new Long[50]; //лист айдишников, отдельная сущность
+    private Long[] cartProductsId = new Long[50]; 
     private Integer currentSize = 0;
     private Double currentSum = 0.0;
 

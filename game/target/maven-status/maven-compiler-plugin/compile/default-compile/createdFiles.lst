@@ -1,0 +1,11 @@
+com\example\dto\MessageDto.class
+com\example\MainClient.class
+com\example\Room.class
+com\example\models\User$UserBuilder.class
+com\example\dto\MessageDto$MessageDtoBuilder.class
+com\example\servicies\AuthService.class
+com\example\GameServer.class
+com\example\repositories\UserRepository.class
+com\example\ClientHandler.class
+com\example\models\User.class
+com\example\MainServer.class

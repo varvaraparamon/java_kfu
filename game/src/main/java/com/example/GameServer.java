@@ -19,7 +19,8 @@ public class GameServer {
     private final ObjectProvider<Room> roomProvider;
 
     @Autowired
-    public GameServer(ObjectProvider<ClientHandler> clientHandlerProvider, ObjectProvider<Room> roomProvider) {
+    public GameServer(ObjectProvider<ClientHandler> clientHandlerProvider, 
+                      ObjectProvider<Room> roomProvider) {
         this.clientHandlerProvider = clientHandlerProvider;
         this.roomProvider = roomProvider;
     }
@@ -31,13 +32,16 @@ public class GameServer {
 
             while (true) {
                 Socket socket = server.accept();
+                
                 ClientHandler client = clientHandlerProvider.getObject(socket);
-
+                
                 Room room = findAvailableRoom();
+                
                 room.addPlayer(client);
+                
                 client.start();
 
-                System.out.println("Клиент подключен к комнате " + roomId(room));
+                System.out.println("Клиент " + client.getUsername() + " подключен к комнате " + roomId(room));
             }
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
@@ -50,6 +54,7 @@ public class GameServer {
                 return room;
             }
         }
+
         Room newRoom = roomProvider.getObject(nextRoomId++);
         rooms.add(newRoom);
         return newRoom;
